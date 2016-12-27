@@ -1,0 +1,41 @@
+
+- name: "variable lvm_thinpool should be dict"
+  assert:
+    that: lvm_thinpool is mapping
+
+- name: "Create LVM volume group"
+  lvg:
+    pvs: '{{ lvm_thinpool.physical_volumes }}'
+    state: present
+    vg: '{{ lvm_thinpool.volume_group }}'
+
+- name: "Check datavolume exists"
+  stat:
+    path: '/dev/mapper/{{ lvm_thinpool.volume_group }}-{{ lvm_thinpool.name }}'
+  ignore_errors: true
+  register: _volume
+
+- name: "Create data volume"
+  lvol:
+    lv: '{{ lvm_thinpool.name }}'
+    size: '{{ lvm_thinpool.data_size }}'
+    vg: '{{ lvm_thinpool.volume_group }}'
+  register: _datavolume_created
+  when: not _volume.stat.exists
+
+- name: "Create metadata volume"
+  lvol:
+    lv: '{{ lvm_thinpool.name }}-meta'
+    size: '{{ lvm_thinpool.metadata_size }}'
+    vg: '{{ lvm_thinpool.volume_group }}'
+  when: _datavolume_created|changed
+
+- name: "Convert data volume to thin pool one"
+  shell:
+    lvconvert
+        --type thin-pool
+        --poolmetadata "{{ lvm_thinpool.volume_group }}/{{ lvm_thinpool.name }}-meta"
+        "{{ lvm_thinpool.volume_group }}/{{ lvm_thinpool.name }}"
+        -y
+        -c 512K
+  when: _datavolume_created|changed

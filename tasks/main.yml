@@ -1,0 +1,11 @@
+
+- name: "Create one LVM thin pool"
+  include: one_thinpool.yml
+  when: lvm_thinpool is defined
+
+- name: "Create multiple LVM thin pools"
+  include: one_thinpool.yml
+  with_items: '{{ lvm_thinpools }}'
+  when: lvm_thinpools is defined
+  loop_control:
+    loop_var: lvm_thinpool

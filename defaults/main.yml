@@ -1,0 +1,14 @@
+---
+lvm_thinpools: []
+
+# Write your lvm_thinpools here.
+#
+#lvm_thinpools:
+#  - name: thinpool
+#    volume_group: docker
+#    physical_volumes:
+#      - /dev/disk/by-id/ata-VIRTUAL_docker
+#      - /dev/sda
+#    metadata_size: "1%VG"
+#    data_size: "90%VG"
+
