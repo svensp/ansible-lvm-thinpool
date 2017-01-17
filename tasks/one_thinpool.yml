@@ -8,6 +8,7 @@
     pvs: '{{ lvm_thinpool.physical_volumes }}'
     state: present
     vg: '{{ lvm_thinpool.volume_group }}'
+  when: lvm_thinpool.physical_volumes|default(None)
 
 - name: "Check datavolume exists"
   stat:
