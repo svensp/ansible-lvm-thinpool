@@ -29,7 +29,7 @@
     lv: '{{ lvm_thinpool.name }}-meta'
     size: '{{ lvm_thinpool.metadata_size }}'
     vg: '{{ lvm_thinpool.volume_group }}'
-  when: _datavolume_created|changed
+  when: _datavolume_created is changed
 
 - name: "Convert data volume to thin pool one"
   shell:
@@ -39,4 +39,30 @@
         "{{ lvm_thinpool.volume_group }}/{{ lvm_thinpool.name }}"
         -y
         -c 512K
-  when: _datavolume_created|changed
+  when: _datavolume_created is changed
+
+- name: "Create thin pool profile directory"
+  file:
+    path: /etc/lvm/profile
+    state: directory
+    mode: 0755
+
+- name: "Delete thin pool profile"
+  file:
+    path: "/etc/lvm/profile/{{ lvm_thinpool.name }}.profile"
+    state: absent
+  when: lvm_thinpool.profile is not defined
+
+- name: "Create thin pool profile"
+  copy:
+    content: "{{ lvm_thinpool.profile }}"
+    dest: "/etc/lvm/profile/{{ lvm_thinpool.name }}.profile"
+  register: _profile_created
+  when: lvm_thinpool.profile is defined
+
+- name: "Apply thin pool profile"
+  shell:
+    lvchange
+        --metadataprofile  "{{ lvm_thinpool.name }}"
+        "{{ lvm_thinpool.volume_group }}/{{ lvm_thinpool.name }}"
+  when: _profile_created is defined and _profile_created is changed
