@@ -1,3 +1,8 @@
+- name: Install thin-provisioning-tools
+  apt:
+    name: thin-provisioning-tools
+    state: present
+  when: ansible_pkg_mgr == "apt"
 
 - name: "Create one LVM thin pool"
   include: one_thinpool.yml
